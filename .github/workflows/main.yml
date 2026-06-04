@@ -1,0 +1,29 @@
+name: 更新中国节假日日历
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+      - name: 安装 Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.0'
+      - name: 安装依赖
+        run: gem install icalendar
+      - name: 下载原始日历并运行脚本
+        run: |
+          curl -o original_calendar.ics https://calendars.icloud.com/holidays/cn_zh.ics
+          ruby split.rb
+      - name: 提交更新
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add holiday_green.ics workday_red.ics festival_blue.ics
+          git commit -m "自动更新节假日日历" || echo "无变化"
+          git push
